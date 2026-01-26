@@ -57,6 +57,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        service: {
+          clinic: "hsl(var(--service-clinic))",
+          library: "hsl(var(--service-library))",
+          shelter: "hsl(var(--service-shelter))",
+          food: "hsl(var(--service-food))",
+        },
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        card: "var(--shadow-card)",
+        elevated: "var(--shadow-elevated)",
       },
       borderRadius: {
         lg: "var(--radius)",
