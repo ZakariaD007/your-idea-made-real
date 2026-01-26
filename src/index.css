@@ -2,95 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Leaflet CSS is imported in the ServiceMap component */
+
+/* Service Finder Design System
+   A warm, trustworthy civic tech aesthetic with community-focused colors
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core backgrounds */
+    --background: 200 20% 98%;
+    --foreground: 215 25% 15%;
 
+    /* Card surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
+    /* Popover/dropdown surfaces */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Teal for trust and community */
+    --primary: 175 65% 40%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Warm neutral */
+    --secondary: 200 15% 94%;
+    --secondary-foreground: 215 25% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted surfaces */
+    --muted: 200 15% 94%;
+    --muted-foreground: 215 15% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Coral for warmth and CTAs */
+    --accent: 12 80% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Borders and inputs */
+    --border: 200 20% 88%;
+    --input: 200 20% 88%;
+    --ring: 175 65% 40%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Service type colors */
+    --service-clinic: 340 70% 55%;
+    --service-library: 220 70% 55%;
+    --service-shelter: 35 85% 55%;
+    --service-food: 145 60% 45%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Map styling */
+    --map-overlay: 0 0% 0% / 0.05;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(215 25% 15% / 0.1);
+    --shadow-card: 0 2px 12px -2px hsl(215 25% 15% / 0.08);
+    --shadow-elevated: 0 8px 30px -8px hsl(215 25% 15% / 0.15);
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 25%;
+    --sidebar-primary: 175 65% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 15% 96%;
+    --sidebar-accent-foreground: 215 25% 25%;
+    --sidebar-border: 200 20% 90%;
+    --sidebar-ring: 175 65% 40%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 25% 10%;
+    --foreground: 200 15% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 25% 13%;
+    --card-foreground: 200 15% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 25% 13%;
+    --popover-foreground: 200 15% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 175 60% 50%;
+    --primary-foreground: 220 25% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 20% 20%;
+    --secondary-foreground: 200 15% 90%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 200 15% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 12 75% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 175 60% 50%;
+
+    --sidebar-background: 220 25% 12%;
+    --sidebar-foreground: 200 15% 90%;
+    --sidebar-primary: 175 60% 50%;
+    --sidebar-primary-foreground: 220 25% 10%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 200 15% 90%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 175 60% 50%;
   }
 }
 
@@ -100,6 +120,66 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .service-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .service-badge-clinic {
+    background-color: hsl(var(--service-clinic) / 0.15);
+    color: hsl(var(--service-clinic));
+  }
+
+  .service-badge-library {
+    background-color: hsl(var(--service-library) / 0.15);
+    color: hsl(var(--service-library));
+  }
+
+  .service-badge-shelter {
+    background-color: hsl(var(--service-shelter) / 0.15);
+    color: hsl(var(--service-shelter));
+  }
+
+  .service-badge-food {
+    background-color: hsl(var(--service-food) / 0.15);
+    color: hsl(var(--service-food));
+  }
+
+  .map-container {
+    @apply w-full h-full rounded-lg overflow-hidden;
+  }
+
+  .leaflet-container {
+    @apply w-full h-full font-sans;
+  }
+
+  .service-card {
+    @apply bg-card rounded-xl p-4 transition-all duration-200 cursor-pointer border border-transparent;
+    box-shadow: var(--shadow-card);
+  }
+
+  .service-card:hover {
+    box-shadow: var(--shadow-elevated);
+    @apply border-primary/20 -translate-y-0.5;
+  }
+
+  .filter-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .filter-chip-active {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }

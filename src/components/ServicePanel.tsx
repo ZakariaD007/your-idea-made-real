@@ -1,0 +1,105 @@
+import { useState } from 'react';
+import { Menu, MapPin } from 'lucide-react';
+import { Service, ServiceType } from '@/data/services';
+import { ServiceCard } from './ServiceCard';
+import { FilterChips } from './FilterChips';
+import { SearchInput } from './SearchInput';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+
+interface ServicePanelProps {
+  selectedService: Service | null;
+  onSelectService: (service: Service) => void;
+  filteredServices: Service[];
+  activeFilters: ServiceType[];
+  onToggleFilter: (type: ServiceType) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+}
+
+export function ServicePanel({
+  selectedService,
+  onSelectService,
+  filteredServices,
+  activeFilters,
+  onToggleFilter,
+  searchQuery,
+  onSearchChange,
+}: ServicePanelProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  return (
+    <div
+      className={cn(
+        'bg-background border-r border-border flex flex-col transition-all duration-300 ease-in-out',
+        isCollapsed ? 'w-0 md:w-16' : 'w-full md:w-[400px] lg:w-[440px]'
+      )}
+    >
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-4">
+          <div className={cn('flex items-center gap-3', isCollapsed && 'hidden md:hidden')}>
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <MapPin className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg text-foreground">Service Finder</h1>
+              <p className="text-xs text-muted-foreground">Find nearby public services</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="shrink-0"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {!isCollapsed && (
+          <>
+            <SearchInput
+              value={searchQuery}
+              onChange={onSearchChange}
+              placeholder="Search by name or address..."
+            />
+            <div className="mt-4">
+              <FilterChips activeFilters={activeFilters} onToggle={onToggleFilter} />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Service List */}
+      {!isCollapsed && (
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-3">
+            {filteredServices.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No services found</p>
+                <p className="text-sm mt-1">Try adjusting your filters or search</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''} found
+                </p>
+                {filteredServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    isSelected={selectedService?.id === service.id}
+                    onClick={() => onSelectService(service)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
+  );
+}
