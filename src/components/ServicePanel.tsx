@@ -4,9 +4,12 @@ import { Service, ServiceType } from '@/data/services';
 import { ServiceCard } from './ServiceCard';
 import { FilterChips } from './FilterChips';
 import { SearchInput } from './SearchInput';
+import { UserMenu } from './UserMenu';
+import { SuggestLocationDialog } from './SuggestLocationDialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ServicePanelProps {
   selectedService: Service | null;
@@ -16,6 +19,7 @@ interface ServicePanelProps {
   onToggleFilter: (type: ServiceType) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onLocationAdded: () => void;
 }
 
 export function ServicePanel({
@@ -26,8 +30,10 @@ export function ServicePanel({
   onToggleFilter,
   searchQuery,
   onSearchChange,
+  onLocationAdded,
 }: ServicePanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div
@@ -48,14 +54,19 @@ export function ServicePanel({
               <p className="text-xs text-muted-foreground">Find nearby public services</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="shrink-0"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className={cn(isCollapsed && 'hidden md:hidden')}>
+              <UserMenu />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="shrink-0"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {!isCollapsed && (
@@ -68,6 +79,11 @@ export function ServicePanel({
             <div className="mt-4">
               <FilterChips activeFilters={activeFilters} onToggle={onToggleFilter} />
             </div>
+            {user && (
+              <div className="mt-4">
+                <SuggestLocationDialog onSuccess={onLocationAdded} />
+              </div>
+            )}
           </>
         )}
       </div>
