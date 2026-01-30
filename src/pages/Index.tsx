@@ -1,12 +1,31 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Service, ServiceType, services } from '@/data/services';
 import { ServicePanel } from '@/components/ServicePanel';
 import { ServiceMap } from '@/components/ServiceMap';
+import { supabase } from '@/lib/supabase';
+import type { Location } from '@/types/database';
 
 const Index = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [activeFilters, setActiveFilters] = useState<ServiceType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [approvedLocations, setApprovedLocations] = useState<Location[]>([]);
+
+  const fetchApprovedLocations = async () => {
+    const { data } = await supabase
+      .from('locations')
+      .select('*')
+      .eq('status', 'approved');
+    
+    if (data) {
+      setApprovedLocations(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchApprovedLocations();
+  }, []);
 
   const toggleFilter = (type: ServiceType) => {
     setActiveFilters((prev) =>
@@ -41,12 +60,15 @@ const Index = () => {
         onToggleFilter={toggleFilter}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onLocationAdded={fetchApprovedLocations}
       />
       <div className="flex-1 min-h-[50vh] md:min-h-full relative">
         <ServiceMap
           services={filteredServices}
+          locations={approvedLocations}
           selectedService={selectedService}
           onSelectService={setSelectedService}
+          onSelectLocation={setSelectedLocation}
         />
       </div>
     </div>
