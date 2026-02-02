@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { MapPin, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,48 +9,38 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface SuggestLocationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  coordinates: { lat: number; lng: number } | null;
   onSuccess: () => void;
 }
 
-export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps) {
-  const [open, setOpen] = useState(false);
+export function SuggestLocationDialog({ 
+  open, 
+  onOpenChange, 
+  coordinates, 
+  onSuccess 
+}: SuggestLocationDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleGetCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLatitude(position.coords.latitude.toString());
-          setLongitude(position.coords.longitude.toString());
-          toast({
-            title: 'Location detected',
-            description: 'Your current location has been added.',
-          });
-        },
-        () => {
-          toast({
-            variant: 'destructive',
-            title: 'Location error',
-            description: 'Could not get your location. Please enter manually.',
-          });
-        }
-      );
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setName('');
+      setDescription('');
     }
-  };
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,11 +54,11 @@ export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps)
       return;
     }
 
-    if (!name || !latitude || !longitude) {
+    if (!name || !coordinates) {
       toast({
         variant: 'destructive',
         title: 'Missing fields',
-        description: 'Please fill in all required fields.',
+        description: 'Please fill in the service name.',
       });
       return;
     }
@@ -80,8 +69,8 @@ export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps)
       const { error } = await supabase.from('locations').insert({
         name,
         description: description || null,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
         status: 'pending',
         created_by: user.id,
       });
@@ -90,14 +79,10 @@ export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps)
 
       toast({
         title: 'Suggestion submitted!',
-        description: 'Your location will be reviewed by an admin.',
+        description: 'Your location will be reviewed by an admin before appearing on the map.',
       });
 
-      setOpen(false);
-      setName('');
-      setDescription('');
-      setLatitude('');
-      setLongitude('');
+      onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Could not submit your suggestion.';
@@ -112,20 +97,24 @@ export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps)
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full">
-          <Plus className="h-4 w-4 mr-2" />
-          Suggest a Service
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Suggest a New Service</DialogTitle>
+          <DialogTitle>Add Service Details</DialogTitle>
           <DialogDescription>
-            Help the community by adding a new service location. It will be reviewed before appearing on the map.
+            You've placed a marker on the map. Now add details about this service location.
           </DialogDescription>
         </DialogHeader>
+        
+        {coordinates && (
+          <div className="bg-muted rounded-lg p-3 text-sm">
+            <p className="font-medium text-foreground">Selected Location</p>
+            <p className="text-muted-foreground">
+              Lat: {coordinates.lat.toFixed(6)}, Lng: {coordinates.lng.toFixed(6)}
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Service Name *</Label>
@@ -135,6 +124,7 @@ export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps)
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              autoFocus
             />
           </div>
 
@@ -149,46 +139,19 @@ export function SuggestLocationDialog({ onSuccess }: SuggestLocationDialogProps)
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude *</Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="any"
-                placeholder="-33.925"
-                value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude *</Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="any"
-                placeholder="18.455"
-                value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
-                required
-              />
-            </div>
+          <div className="flex gap-3">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading ? 'Submitting...' : 'Submit Suggestion'}
+            </Button>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleGetCurrentLocation}
-          >
-            <MapPin className="h-4 w-4 mr-2" />
-            Use My Current Location
-          </Button>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Submitting...' : 'Submit Suggestion'}
-          </Button>
         </form>
       </DialogContent>
     </Dialog>

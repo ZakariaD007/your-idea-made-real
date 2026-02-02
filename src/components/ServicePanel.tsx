@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Menu, MapPin } from 'lucide-react';
+import { Menu, MapPin, Plus, X } from 'lucide-react';
 import { Service, ServiceType } from '@/data/services';
 import { ServiceCard } from './ServiceCard';
 import { FilterChips } from './FilterChips';
 import { SearchInput } from './SearchInput';
 import { UserMenu } from './UserMenu';
-import { SuggestLocationDialog } from './SuggestLocationDialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -19,7 +18,9 @@ interface ServicePanelProps {
   onToggleFilter: (type: ServiceType) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onLocationAdded: () => void;
+  isPlacingMarker: boolean;
+  onStartPlacingMarker: () => void;
+  onCancelPlacement: () => void;
 }
 
 export function ServicePanel({
@@ -30,7 +31,9 @@ export function ServicePanel({
   onToggleFilter,
   searchQuery,
   onSearchChange,
-  onLocationAdded,
+  isPlacingMarker,
+  onStartPlacingMarker,
+  onCancelPlacement,
 }: ServicePanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
@@ -81,7 +84,24 @@ export function ServicePanel({
             </div>
             {user && (
               <div className="mt-4">
-                <SuggestLocationDialog onSuccess={onLocationAdded} />
+                {isPlacingMarker ? (
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={onCancelPlacement}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel Placement
+                  </Button>
+                ) : (
+                  <Button 
+                    className="w-full" 
+                    onClick={onStartPlacingMarker}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Suggest a Service
+                  </Button>
+                )}
               </div>
             )}
           </>
