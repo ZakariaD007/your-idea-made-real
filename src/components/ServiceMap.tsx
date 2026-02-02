@@ -2,7 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Location } from '@/types/database';
-import { Service, serviceTypeLabels, serviceTypeIcons } from '@/data/services';
+import { Service, serviceTypeIcons } from '@/data/services';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface ServiceMapProps {
   services: Service[];
@@ -10,6 +12,9 @@ interface ServiceMapProps {
   selectedService: Service | null;
   onSelectService: (service: Service | null) => void;
   onSelectLocation: (location: Location | null) => void;
+  isPlacingMarker: boolean;
+  onMarkerPlaced: (coords: { lat: number; lng: number }) => void;
+  pendingMarkerCoords: { lat: number; lng: number } | null;
 }
 
 const MAPTILER_KEY = 'wTsvJCy56XFWoAJfKteb';
@@ -27,12 +32,18 @@ export function ServiceMap({
   locations,
   selectedService, 
   onSelectService,
-  onSelectLocation 
+  onSelectLocation,
+  isPlacingMarker,
+  onMarkerPlaced,
+  pendingMarkerCoords,
 }: ServiceMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const pendingMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   // Initialize map
   useEffect(() => {
@@ -63,6 +74,77 @@ export function ServiceMap({
       map.current = null;
     };
   }, []);
+
+  // Handle map clicks for placing markers
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const handleMapClick = (e: maplibregl.MapMouseEvent) => {
+      if (!isPlacingMarker) return;
+      
+      if (!user) {
+        toast({
+          variant: 'destructive',
+          title: 'Sign in required',
+          description: 'Please sign in to suggest a service location.',
+        });
+        return;
+      }
+
+      const { lng, lat } = e.lngLat;
+      onMarkerPlaced({ lat, lng });
+    };
+
+    map.current.on('click', handleMapClick);
+
+    // Change cursor when in placing mode
+    if (isPlacingMarker) {
+      map.current.getCanvas().style.cursor = 'crosshair';
+    } else {
+      map.current.getCanvas().style.cursor = '';
+    }
+
+    return () => {
+      map.current?.off('click', handleMapClick);
+    };
+  }, [isPlacingMarker, mapLoaded, user, toast, onMarkerPlaced]);
+
+  // Handle pending marker display
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    // Remove existing pending marker
+    if (pendingMarkerRef.current) {
+      pendingMarkerRef.current.remove();
+      pendingMarkerRef.current = null;
+    }
+
+    // Add new pending marker if coordinates exist
+    if (pendingMarkerCoords) {
+      const el = document.createElement('div');
+      el.innerHTML = `
+        <div style="
+          background-color: ${typeColors['pending']};
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+          border: 4px solid white;
+          animation: pulse 1.5s infinite;
+        ">
+          📍
+        </div>
+      `;
+
+      pendingMarkerRef.current = new maplibregl.Marker({ element: el })
+        .setLngLat([pendingMarkerCoords.lng, pendingMarkerCoords.lat])
+        .addTo(map.current);
+    }
+  }, [pendingMarkerCoords, mapLoaded]);
 
   // Update markers when services or locations change
   useEffect(() => {
@@ -108,7 +190,7 @@ export function ServiceMap({
       markersRef.current.push(marker);
     });
 
-    // Add location markers (user-submitted)
+    // Add approved location markers (user-submitted)
     locations.forEach((location) => {
       const el = document.createElement('div');
       el.className = 'location-marker';
@@ -155,6 +237,19 @@ export function ServiceMap({
   }, [selectedService]);
 
   return (
-    <div ref={mapContainer} className="h-full w-full" />
+    <>
+      <div ref={mapContainer} className="h-full w-full" />
+      {isPlacingMarker && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg z-10 text-sm font-medium">
+          Click on the map to place a service marker
+        </div>
+      )}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+      `}</style>
+    </>
   );
 }

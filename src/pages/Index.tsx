@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Service, ServiceType, services } from '@/data/services';
 import { ServicePanel } from '@/components/ServicePanel';
 import { ServiceMap } from '@/components/ServiceMap';
+import { SuggestLocationDialog } from '@/components/SuggestLocationDialog';
 import { supabase } from '@/lib/supabase';
 import type { Location } from '@/types/database';
 
@@ -11,6 +12,11 @@ const Index = () => {
   const [activeFilters, setActiveFilters] = useState<ServiceType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [approvedLocations, setApprovedLocations] = useState<Location[]>([]);
+  
+  // Marker placement state
+  const [isPlacingMarker, setIsPlacingMarker] = useState(false);
+  const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [showSuggestDialog, setShowSuggestDialog] = useState(false);
 
   const fetchApprovedLocations = async () => {
     const { data } = await supabase
@@ -50,6 +56,34 @@ const Index = () => {
     });
   }, [activeFilters, searchQuery]);
 
+  const handleStartPlacingMarker = () => {
+    setIsPlacingMarker(true);
+    setPendingMarkerCoords(null);
+  };
+
+  const handleMarkerPlaced = (coords: { lat: number; lng: number }) => {
+    setPendingMarkerCoords(coords);
+    setIsPlacingMarker(false);
+    setShowSuggestDialog(true);
+  };
+
+  const handleCancelPlacement = () => {
+    setIsPlacingMarker(false);
+    setPendingMarkerCoords(null);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setShowSuggestDialog(open);
+    if (!open) {
+      setPendingMarkerCoords(null);
+    }
+  };
+
+  const handleLocationSuccess = () => {
+    setPendingMarkerCoords(null);
+    fetchApprovedLocations();
+  };
+
   return (
     <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden">
       <ServicePanel
@@ -60,7 +94,9 @@ const Index = () => {
         onToggleFilter={toggleFilter}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onLocationAdded={fetchApprovedLocations}
+        isPlacingMarker={isPlacingMarker}
+        onStartPlacingMarker={handleStartPlacingMarker}
+        onCancelPlacement={handleCancelPlacement}
       />
       <div className="flex-1 min-h-[50vh] md:min-h-full relative">
         <ServiceMap
@@ -69,8 +105,18 @@ const Index = () => {
           selectedService={selectedService}
           onSelectService={setSelectedService}
           onSelectLocation={setSelectedLocation}
+          isPlacingMarker={isPlacingMarker}
+          onMarkerPlaced={handleMarkerPlaced}
+          pendingMarkerCoords={pendingMarkerCoords}
         />
       </div>
+
+      <SuggestLocationDialog
+        open={showSuggestDialog}
+        onOpenChange={handleDialogClose}
+        coordinates={pendingMarkerCoords}
+        onSuccess={handleLocationSuccess}
+      />
     </div>
   );
 };
