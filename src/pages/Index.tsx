@@ -39,8 +39,27 @@ const Index = () => {
     );
   };
 
+  // Convert approved locations to Service format
+  const approvedAsServices: Service[] = useMemo(() => {
+    return approvedLocations.map((loc) => ({
+      id: `loc-${loc.id}`,
+      name: loc.name,
+      type: 'clinic' as ServiceType, // Default type for user suggestions
+      address: `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`,
+      lat: Number(loc.latitude),
+      lng: Number(loc.longitude),
+      hours: 'Contact for hours',
+      description: loc.description || undefined,
+    }));
+  }, [approvedLocations]);
+
+  // Combine static services with approved locations
+  const allServices = useMemo(() => {
+    return [...services, ...approvedAsServices];
+  }, [approvedAsServices]);
+
   const filteredServices = useMemo(() => {
-    return services.filter((service) => {
+    return allServices.filter((service) => {
       if (activeFilters.length > 0 && !activeFilters.includes(service.type)) {
         return false;
       }
@@ -54,7 +73,7 @@ const Index = () => {
       }
       return true;
     });
-  }, [activeFilters, searchQuery]);
+  }, [allServices, activeFilters, searchQuery]);
 
   const handleStartPlacingMarker = () => {
     setIsPlacingMarker(true);
