@@ -44,7 +44,7 @@ const Index = () => {
     return approvedLocations.map((loc) => ({
       id: `loc-${loc.id}`,
       name: loc.name,
-      type: 'clinic' as ServiceType, // Default type for user suggestions
+      type: (loc.service_type || 'clinic') as ServiceType,
       address: `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`,
       lat: Number(loc.latitude),
       lng: Number(loc.longitude),

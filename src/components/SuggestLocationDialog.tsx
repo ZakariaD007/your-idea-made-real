@@ -10,9 +10,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import type { ServiceType } from '@/types/database';
+
+const serviceTypeOptions: { value: ServiceType; label: string }[] = [
+  { value: 'clinic', label: 'Hospital / Clinic' },
+  { value: 'library', label: 'Library' },
+  { value: 'shelter', label: 'Shelter' },
+  { value: 'food', label: 'Food Bank' },
+];
 
 interface SuggestLocationDialogProps {
   open: boolean;
@@ -29,6 +44,7 @@ export function SuggestLocationDialog({
 }: SuggestLocationDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [serviceType, setServiceType] = useState<ServiceType>('clinic');
   const [isLoading, setIsLoading] = useState(false);
   
   const { user } = useAuth();
@@ -39,6 +55,7 @@ export function SuggestLocationDialog({
     if (!open) {
       setName('');
       setDescription('');
+      setServiceType('clinic');
     }
   }, [open]);
 
@@ -71,6 +88,7 @@ export function SuggestLocationDialog({
         description: description || null,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
+        service_type: serviceType,
         status: 'pending',
         created_by: user.id,
       });
@@ -126,6 +144,22 @@ export function SuggestLocationDialog({
               required
               autoFocus
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="serviceType">Service Type *</Label>
+            <Select value={serviceType} onValueChange={(value) => setServiceType(value as ServiceType)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a service type" />
+              </SelectTrigger>
+              <SelectContent>
+                {serviceTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

@@ -17,6 +17,8 @@ export interface UserRole {
   created_at: string;
 }
 
+export type ServiceType = 'clinic' | 'library' | 'shelter' | 'food';
+
 export interface Location {
   id: string;
   name: string;
@@ -25,6 +27,7 @@ export interface Location {
   longitude: number;
   geometry?: unknown;
   status: LocationStatus;
+  service_type: ServiceType;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -71,6 +74,7 @@ export interface Database {
           description?: string | null;
           latitude: number;
           longitude: number;
+          service_type?: ServiceType;
           status?: LocationStatus;
           created_by?: string | null;
         };
@@ -79,6 +83,7 @@ export interface Database {
           description?: string | null;
           latitude?: number;
           longitude?: number;
+          service_type?: ServiceType;
           status?: LocationStatus;
           updated_at?: string;
         };
