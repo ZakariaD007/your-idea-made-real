@@ -19,6 +19,19 @@ export interface UserRole {
 
 export type ServiceType = 'clinic' | 'library' | 'shelter' | 'food';
 
+export interface ServiceRow {
+  id: string;
+  name: string;
+  type: ServiceType;
+  address: string;
+  lat: number;
+  lng: number;
+  phone: string | null;
+  hours: string;
+  description: string | null;
+  created_at: string;
+}
+
 export interface Location {
   id: string;
   name: string;

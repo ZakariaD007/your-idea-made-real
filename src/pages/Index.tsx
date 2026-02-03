@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Service, ServiceType, services } from '@/data/services';
+import { Service, ServiceType } from '@/data/services';
 import { ServicePanel } from '@/components/ServicePanel';
 import { ServiceMap } from '@/components/ServiceMap';
 import { SuggestLocationDialog } from '@/components/SuggestLocationDialog';
@@ -11,12 +11,36 @@ const Index = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [activeFilters, setActiveFilters] = useState<ServiceType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [services, setServices] = useState<Service[]>([]);
   const [approvedLocations, setApprovedLocations] = useState<Location[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Marker placement state
   const [isPlacingMarker, setIsPlacingMarker] = useState(false);
   const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showSuggestDialog, setShowSuggestDialog] = useState(false);
+
+  // Fetch services from Supabase
+  const fetchServices = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*');
+    
+    if (data && !error) {
+      setServices(data.map((s) => ({
+        id: s.id,
+        name: s.name,
+        type: s.type as ServiceType,
+        address: s.address,
+        lat: Number(s.lat),
+        lng: Number(s.lng),
+        phone: s.phone || undefined,
+        hours: s.hours,
+        description: s.description || undefined,
+      })));
+    }
+    setIsLoading(false);
+  };
 
   const fetchApprovedLocations = async () => {
     const { data } = await supabase
@@ -30,6 +54,7 @@ const Index = () => {
   };
 
   useEffect(() => {
+    fetchServices();
     fetchApprovedLocations();
   }, []);
 
@@ -53,10 +78,10 @@ const Index = () => {
     }));
   }, [approvedLocations]);
 
-  // Combine static services with approved locations
+  // Combine database services with approved locations
   const allServices = useMemo(() => {
     return [...services, ...approvedAsServices];
-  }, [approvedAsServices]);
+  }, [services, approvedAsServices]);
 
   const filteredServices = useMemo(() => {
     return allServices.filter((service) => {
@@ -116,6 +141,7 @@ const Index = () => {
         isPlacingMarker={isPlacingMarker}
         onStartPlacingMarker={handleStartPlacingMarker}
         onCancelPlacement={handleCancelPlacement}
+        isLoading={isLoading}
       />
       <div className="flex-1 min-h-[50vh] md:min-h-full relative">
         <ServiceMap
