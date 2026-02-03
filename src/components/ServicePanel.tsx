@@ -21,6 +21,7 @@ interface ServicePanelProps {
   isPlacingMarker: boolean;
   onStartPlacingMarker: () => void;
   onCancelPlacement: () => void;
+  isLoading?: boolean;
 }
 
 export function ServicePanel({
@@ -34,6 +35,7 @@ export function ServicePanel({
   isPlacingMarker,
   onStartPlacingMarker,
   onCancelPlacement,
+  isLoading = false,
 }: ServicePanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
@@ -112,7 +114,12 @@ export function ServicePanel({
       {!isCollapsed && (
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-3">
-            {filteredServices.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p>Loading services...</p>
+              </div>
+            ) : filteredServices.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No services found</p>
