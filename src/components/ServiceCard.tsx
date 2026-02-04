@@ -18,9 +18,10 @@ const typeColors: Record<string, string> = {
 export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) {
   return (
     <div
+      data-service-id={service.id}
       className={cn(
-        'service-card',
-        isSelected && 'border-primary ring-2 ring-primary/20'
+        'service-card scroll-mt-4',
+        isSelected && 'border-primary ring-2 ring-primary/20 bg-primary/5'
       )}
       onClick={onClick}
     >
