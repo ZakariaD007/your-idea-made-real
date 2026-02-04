@@ -20,13 +20,13 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import type { ServiceType } from '@/types/database';
 
-const serviceTypeOptions: { value: ServiceType; label: string }[] = [
+const serviceTypeOptions = [
   { value: 'clinic', label: 'Hospital / Clinic' },
   { value: 'library', label: 'Library' },
   { value: 'shelter', label: 'Shelter' },
   { value: 'food', label: 'Food Bank' },
+  { value: 'other', label: 'Other' },
 ];
 
 interface SuggestLocationDialogProps {
@@ -44,7 +44,8 @@ export function SuggestLocationDialog({
 }: SuggestLocationDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [serviceType, setServiceType] = useState<ServiceType>('clinic');
+  const [serviceType, setServiceType] = useState('clinic');
+  const [customType, setCustomType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const { user } = useAuth();
@@ -56,6 +57,7 @@ export function SuggestLocationDialog({
       setName('');
       setDescription('');
       setServiceType('clinic');
+      setCustomType('');
     }
   }, [open]);
 
@@ -80,7 +82,21 @@ export function SuggestLocationDialog({
       return;
     }
 
+    if (serviceType === 'other' && !customType.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing service type',
+        description: 'Please enter a custom service type.',
+      });
+      return;
+    }
+
     setIsLoading(true);
+
+    // Use custom type if "other" is selected, otherwise use selected type
+    const finalServiceType = serviceType === 'other' 
+      ? customType.trim().toLowerCase() 
+      : serviceType;
 
     try {
       const { error } = await supabase.from('locations').insert({
@@ -88,7 +104,7 @@ export function SuggestLocationDialog({
         description: description || null,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
-        service_type: serviceType,
+        service_type: finalServiceType,
         status: 'pending',
         created_by: user.id,
       });
@@ -148,7 +164,7 @@ export function SuggestLocationDialog({
 
           <div className="space-y-2">
             <Label htmlFor="serviceType">Service Type *</Label>
-            <Select value={serviceType} onValueChange={(value) => setServiceType(value as ServiceType)}>
+            <Select value={serviceType} onValueChange={setServiceType}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a service type" />
               </SelectTrigger>
@@ -161,6 +177,19 @@ export function SuggestLocationDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {serviceType === 'other' && (
+            <div className="space-y-2">
+              <Label htmlFor="customType">Custom Service Type *</Label>
+              <Input
+                id="customType"
+                placeholder="e.g., Community Center, Pharmacy..."
+                value={customType}
+                onChange={(e) => setCustomType(e.target.value)}
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>

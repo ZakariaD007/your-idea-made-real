@@ -16,6 +16,7 @@ interface ServicePanelProps {
   filteredServices: Service[];
   activeFilters: ServiceType[];
   onToggleFilter: (type: ServiceType) => void;
+  availableTypes: ServiceType[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
   isPlacingMarker: boolean;
@@ -30,6 +31,7 @@ export function ServicePanel({
   filteredServices,
   activeFilters,
   onToggleFilter,
+  availableTypes,
   searchQuery,
   onSearchChange,
   isPlacingMarker,
@@ -95,7 +97,7 @@ export function ServicePanel({
               placeholder="Search by name or address..."
             />
             <div className="mt-4">
-              <FilterChips activeFilters={activeFilters} onToggle={onToggleFilter} />
+              <FilterChips activeFilters={activeFilters} onToggle={onToggleFilter} availableTypes={availableTypes} />
             </div>
             {user && (
               <div className="mt-4">

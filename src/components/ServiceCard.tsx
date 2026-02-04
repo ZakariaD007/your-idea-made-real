@@ -1,5 +1,5 @@
 import { MapPin, Clock, Phone } from 'lucide-react';
-import { Service, serviceTypeLabels } from '@/data/services';
+import { Service, getServiceTypeLabel, coreServiceTypeLabels } from '@/data/services';
 import { cn } from '@/lib/utils';
 
 interface ServiceCardProps {
@@ -15,6 +15,14 @@ const typeColors: Record<string, string> = {
   food: 'service-badge-food',
 };
 
+// Get badge class - use specific color for core types, default for custom
+const getBadgeClass = (type: string): string => {
+  if (type in coreServiceTypeLabels) {
+    return typeColors[type] || '';
+  }
+  return 'bg-primary/10 text-primary';
+};
+
 export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) {
   return (
     <div
@@ -27,8 +35,8 @@ export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) 
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <h3 className="font-semibold text-foreground leading-tight">{service.name}</h3>
-        <span className={cn('service-badge shrink-0', typeColors[service.type])}>
-          {serviceTypeLabels[service.type]}
+        <span className={cn('service-badge shrink-0', getBadgeClass(service.type))}>
+          {getServiceTypeLabel(service.type)}
         </span>
       </div>
       

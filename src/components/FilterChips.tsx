@@ -1,17 +1,16 @@
-import { ServiceType, serviceTypeLabels, serviceTypeIcons } from '@/data/services';
+import { getServiceTypeLabel, getServiceTypeIcon, ServiceType } from '@/data/services';
 import { cn } from '@/lib/utils';
 
 interface FilterChipsProps {
   activeFilters: ServiceType[];
   onToggle: (type: ServiceType) => void;
+  availableTypes: ServiceType[];
 }
 
-const allTypes: ServiceType[] = ['clinic', 'library', 'shelter', 'food'];
-
-export function FilterChips({ activeFilters, onToggle }: FilterChipsProps) {
+export function FilterChips({ activeFilters, onToggle, availableTypes }: FilterChipsProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {allTypes.map((type) => {
+      {availableTypes.map((type) => {
         const isActive = activeFilters.includes(type);
         return (
           <button
@@ -22,8 +21,8 @@ export function FilterChips({ activeFilters, onToggle }: FilterChipsProps) {
               isActive && 'filter-chip-active'
             )}
           >
-            <span>{serviceTypeIcons[type]}</span>
-            <span>{serviceTypeLabels[type]}</span>
+            <span>{getServiceTypeIcon(type)}</span>
+            <span>{getServiceTypeLabel(type)}</span>
           </button>
         );
       })}

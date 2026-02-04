@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Location } from '@/types/database';
-import { Service, serviceTypeIcons } from '@/data/services';
+import { Service, getServiceTypeIcon } from '@/data/services';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -212,7 +212,7 @@ export function ServiceMap({
             transition: all 0.2s ease;
             transform: ${isSelected ? 'scale(1.1)' : 'scale(1)'};
           ">
-            ${serviceTypeIcons[service.type]}
+            ${getServiceTypeIcon(service.type)}
           </div>
         </div>
       `;
