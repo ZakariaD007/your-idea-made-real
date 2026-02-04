@@ -80,19 +80,26 @@ export function ServiceMap({
     if (!map.current || !mapLoaded) return;
 
     const handleMapClick = (e: maplibregl.MapMouseEvent) => {
-      if (!isPlacingMarker) return;
+      // Check if click is on a marker element
+      const target = e.originalEvent.target as HTMLElement;
+      const isMarkerClick = target.closest('.service-marker') || target.closest('.location-marker');
       
-      if (!user) {
-        toast({
-          variant: 'destructive',
-          title: 'Sign in required',
-          description: 'Please sign in to suggest a service location.',
-        });
-        return;
+      if (isPlacingMarker) {
+        if (!user) {
+          toast({
+            variant: 'destructive',
+            title: 'Sign in required',
+            description: 'Please sign in to suggest a service location.',
+          });
+          return;
+        }
+        const { lng, lat } = e.lngLat;
+        onMarkerPlaced({ lat, lng });
+      } else if (!isMarkerClick) {
+        // Click on empty map area - deselect
+        onSelectService(null);
+        onSelectLocation(null);
       }
-
-      const { lng, lat } = e.lngLat;
-      onMarkerPlaced({ lat, lng });
     };
 
     map.current.on('click', handleMapClick);
@@ -210,8 +217,14 @@ export function ServiceMap({
         </div>
       `;
 
-      el.addEventListener('click', () => {
-        onSelectService(service);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Toggle selection - deselect if already selected
+        if (selectedService?.id === service.id) {
+          onSelectService(null);
+        } else {
+          onSelectService(service);
+        }
         onSelectLocation(null);
       });
 
