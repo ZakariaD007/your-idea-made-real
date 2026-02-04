@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, MapPin, Plus, X } from 'lucide-react';
 import { Service, ServiceType } from '@/data/services';
 import { ServiceCard } from './ServiceCard';
@@ -39,6 +39,19 @@ export function ServicePanel({
 }: ServicePanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to selected service when it changes
+  useEffect(() => {
+    if (selectedService && scrollAreaRef.current) {
+      const selectedCard = scrollAreaRef.current.querySelector(
+        `[data-service-id="${selectedService.id}"]`
+      );
+      if (selectedCard) {
+        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selectedService]);
 
   return (
     <div
@@ -112,7 +125,7 @@ export function ServicePanel({
 
       {/* Service List */}
       {!isCollapsed && (
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-3">
             {isLoading ? (
               <div className="text-center py-12 text-muted-foreground">

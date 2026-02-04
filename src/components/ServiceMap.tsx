@@ -156,25 +156,57 @@ export function ServiceMap({
 
     // Add service markers
     services.forEach((service) => {
+      const isSelected = selectedService?.id === service.id;
       const el = document.createElement('div');
       el.className = 'service-marker';
       el.innerHTML = `
-        <div style="
-          background-color: ${typeColors[service.type] || '#6366f1'};
-          width: ${selectedService?.id === service.id ? '44px' : '36px'};
-          height: ${selectedService?.id === service.id ? '44px' : '36px'};
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: ${selectedService?.id === service.id ? '22px' : '18px'};
-          box-shadow: ${selectedService?.id === service.id ? '0 6px 20px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.25)'};
-          border: ${selectedService?.id === service.id ? '4px solid white' : '3px solid white'};
-          cursor: pointer;
-          transition: all 0.2s ease;
-          transform: ${selectedService?.id === service.id ? 'scale(1.1)' : 'scale(1)'};
-        ">
-          ${serviceTypeIcons[service.type]}
+        <div style="position: relative;">
+          ${isSelected ? `
+            <div style="
+              position: absolute;
+              bottom: 100%;
+              left: 50%;
+              transform: translateX(-50%);
+              background-color: hsl(var(--foreground));
+              color: hsl(var(--background));
+              padding: 6px 12px;
+              border-radius: 8px;
+              font-size: 13px;
+              font-weight: 600;
+              white-space: nowrap;
+              margin-bottom: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+              z-index: 10;
+            ">
+              ${service.name}
+              <div style="
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-top: 6px solid hsl(var(--foreground));
+              "></div>
+            </div>
+          ` : ''}
+          <div style="
+            background-color: ${typeColors[service.type] || '#6366f1'};
+            width: ${isSelected ? '44px' : '36px'};
+            height: ${isSelected ? '44px' : '36px'};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: ${isSelected ? '22px' : '18px'};
+            box-shadow: ${isSelected ? '0 6px 20px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.25)'};
+            border: ${isSelected ? '4px solid white' : '3px solid white'};
+            cursor: pointer;
+            transition: all 0.2s ease;
+            transform: ${isSelected ? 'scale(1.1)' : 'scale(1)'};
+          ">
+            ${serviceTypeIcons[service.type]}
+          </div>
         </div>
       `;
 
