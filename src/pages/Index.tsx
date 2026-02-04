@@ -83,6 +83,21 @@ const Index = () => {
     return [...services, ...approvedAsServices];
   }, [services, approvedAsServices]);
 
+  // Get unique service types from all services for dynamic filter chips
+  const availableServiceTypes = useMemo(() => {
+    const types = new Set<string>();
+    allServices.forEach((service) => types.add(service.type));
+    // Sort with core types first, then alphabetically
+    const coreTypes = ['clinic', 'library', 'shelter', 'food'];
+    return Array.from(types).sort((a, b) => {
+      const aIsCore = coreTypes.includes(a);
+      const bIsCore = coreTypes.includes(b);
+      if (aIsCore && !bIsCore) return -1;
+      if (!aIsCore && bIsCore) return 1;
+      return a.localeCompare(b);
+    });
+  }, [allServices]);
+
   const filteredServices = useMemo(() => {
     return allServices.filter((service) => {
       if (activeFilters.length > 0 && !activeFilters.includes(service.type)) {
@@ -136,6 +151,7 @@ const Index = () => {
         filteredServices={filteredServices}
         activeFilters={activeFilters}
         onToggleFilter={toggleFilter}
+        availableTypes={availableServiceTypes}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isPlacingMarker={isPlacingMarker}
