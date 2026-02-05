@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useTheme } from 'next-themes';
 import type { Location } from '@/types/database';
 import { Service, getServiceTypeIcon } from '@/data/services';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +20,10 @@ interface ServiceMapProps {
 }
 
 const MAPTILER_KEY = 'wTsvJCy56XFWoAJfKteb';
+const MAP_STYLES = {
+  light: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
+  dark: `https://api.maptiler.com/maps/streets-dark/style.json?key=${MAPTILER_KEY}`,
+};
 
 const typeColors: Record<string, string> = {
   clinic: '#e84393',
@@ -46,14 +51,17 @@ export function ServiceMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    const initialStyle = resolvedTheme === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light;
+
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
+      style: initialStyle,
       center: [18.455, -33.925], // Cape Town
       zoom: 13,
     });
@@ -75,7 +83,15 @@ export function ServiceMap({
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [resolvedTheme]);
+
+  // Update map style when theme changes
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    
+    const newStyle = resolvedTheme === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light;
+    map.current.setStyle(newStyle);
+  }, [resolvedTheme, mapLoaded]);
 
   // Handle map clicks for placing markers
   useEffect(() => {
