@@ -239,23 +239,57 @@ export function ServiceMap({
 
     // Add approved location markers (user-submitted)
     locations.forEach((location) => {
+      const isSelected = selectedLocation?.id === location.id;
       const el = document.createElement('div');
       el.className = 'location-marker';
       el.innerHTML = `
-        <div style="
-          background-color: ${typeColors['pending']};
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-          border: 3px solid white;
-          cursor: pointer;
-        ">
-          📍
+        <div style="position: relative;">
+          ${isSelected ? `
+            <div style="
+              position: absolute;
+              bottom: 100%;
+              left: 50%;
+              transform: translateX(-50%);
+              background-color: hsl(var(--foreground));
+              color: hsl(var(--background));
+              padding: 6px 12px;
+              border-radius: 8px;
+              font-size: 13px;
+              font-weight: 600;
+              white-space: nowrap;
+              margin-bottom: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+              z-index: 10;
+            ">
+              ${location.name}
+              <div style="
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-top: 6px solid hsl(var(--foreground));
+              "></div>
+            </div>
+          ` : ''}
+          <div style="
+            background-color: ${typeColors['pending']};
+            width: ${isSelected ? '44px' : '32px'};
+            height: ${isSelected ? '44px' : '32px'};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: ${isSelected ? '22px' : '16px'};
+            box-shadow: ${isSelected ? '0 6px 20px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.25)'};
+            border: ${isSelected ? '4px solid white' : '3px solid white'};
+            cursor: pointer;
+            transition: all 0.2s ease;
+            transform: ${isSelected ? 'scale(1.1)' : 'scale(1)'};
+          ">
+            📍
+          </div>
         </div>
       `;
 
