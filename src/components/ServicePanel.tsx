@@ -5,6 +5,7 @@ import { ServiceCard } from './ServiceCard';
 import { FilterChips } from './FilterChips';
 import { SearchInput } from './SearchInput';
 import { UserMenu } from './UserMenu';
+import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -75,6 +76,9 @@ export function ServicePanel({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className={cn(isCollapsed && 'hidden md:hidden')}>
+              <ThemeToggle />
+            </div>
             <div className={cn(isCollapsed && 'hidden md:hidden')}>
               <UserMenu />
             </div>
