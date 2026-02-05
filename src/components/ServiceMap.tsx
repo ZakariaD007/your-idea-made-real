@@ -10,6 +10,7 @@ interface ServiceMapProps {
   services: Service[];
   locations: Location[];
   selectedService: Service | null;
+  selectedLocation: Location | null;
   onSelectService: (service: Service | null) => void;
   onSelectLocation: (location: Location | null) => void;
   isPlacingMarker: boolean;
@@ -31,6 +32,7 @@ export function ServiceMap({
   services, 
   locations,
   selectedService, 
+  selectedLocation,
   onSelectService,
   onSelectLocation,
   isPlacingMarker,
@@ -257,8 +259,14 @@ export function ServiceMap({
         </div>
       `;
 
-      el.addEventListener('click', () => {
-        onSelectLocation(location);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Toggle selection - deselect if already selected
+        if (selectedLocation?.id === location.id) {
+          onSelectLocation(null);
+        } else {
+          onSelectLocation(location);
+        }
         onSelectService(null);
       });
 
@@ -268,7 +276,7 @@ export function ServiceMap({
 
       markersRef.current.push(marker);
     });
-  }, [services, locations, selectedService, mapLoaded, onSelectService, onSelectLocation]);
+  }, [services, locations, selectedService, selectedLocation, mapLoaded, onSelectService, onSelectLocation]);
 
   // Pan to selected service
   useEffect(() => {

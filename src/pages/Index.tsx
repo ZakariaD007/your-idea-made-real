@@ -164,6 +164,7 @@ const Index = () => {
           services={filteredServices}
           locations={approvedLocations}
           selectedService={selectedService}
+          selectedLocation={selectedLocation}
           onSelectService={setSelectedService}
           onSelectLocation={setSelectedLocation}
           isPlacingMarker={isPlacingMarker}
