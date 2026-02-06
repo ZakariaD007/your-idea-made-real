@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { RouteInfo } from '@/hooks/useDirections';
 
 interface ServicePanelProps {
   selectedService: Service | null;
@@ -24,6 +25,10 @@ interface ServicePanelProps {
   onStartPlacingMarker: () => void;
   onCancelPlacement: () => void;
   isLoading?: boolean;
+  onGetDirections?: (service: Service) => void;
+  onClearDirections?: () => void;
+  isLoadingDirections?: boolean;
+  activeRoute?: RouteInfo | null;
 }
 
 export function ServicePanel({
@@ -39,6 +44,10 @@ export function ServicePanel({
   onStartPlacingMarker,
   onCancelPlacement,
   isLoading = false,
+  onGetDirections,
+  onClearDirections,
+  isLoadingDirections,
+  activeRoute,
 }: ServicePanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
@@ -155,6 +164,10 @@ export function ServicePanel({
                     service={service}
                     isSelected={selectedService?.id === service.id}
                     onClick={() => onSelectService(service)}
+                    onGetDirections={onGetDirections}
+                    onClearDirections={onClearDirections}
+                    isLoadingDirections={isLoadingDirections}
+                    activeRoute={selectedService?.id === service.id ? activeRoute : null}
                   />
                 ))}
               </>

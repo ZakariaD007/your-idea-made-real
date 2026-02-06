@@ -6,6 +6,7 @@ import type { Location } from '@/types/database';
 import { Service, getServiceTypeIcon } from '@/data/services';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { RouteInfo } from '@/hooks/useDirections';
 
 interface ServiceMapProps {
   services: Service[];
@@ -17,6 +18,8 @@ interface ServiceMapProps {
   isPlacingMarker: boolean;
   onMarkerPlaced: (coords: { lat: number; lng: number }) => void;
   pendingMarkerCoords: { lat: number; lng: number } | null;
+  route: RouteInfo | null;
+  userLocation: { lat: number; lng: number } | null;
 }
 
 const MAPTILER_KEY = 'wTsvJCy56XFWoAJfKteb';
@@ -43,11 +46,14 @@ export function ServiceMap({
   isPlacingMarker,
   onMarkerPlaced,
   pendingMarkerCoords,
+  route,
+  userLocation,
 }: ServiceMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const pendingMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -338,6 +344,127 @@ export function ServiceMap({
       duration: 1000,
     });
   }, [selectedService]);
+
+  // Draw route on map
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const sourceId = 'route-source';
+    const layerId = 'route-layer';
+    const outlineLayerId = 'route-outline-layer';
+
+    // Function to add or update route
+    const updateRoute = () => {
+      if (!map.current) return;
+
+      // Remove existing route layers
+      if (map.current.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+      }
+      if (map.current.getLayer(outlineLayerId)) {
+        map.current.removeLayer(outlineLayerId);
+      }
+      if (map.current.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+
+      // Remove user marker
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+
+      if (!route || !route.coordinates || route.coordinates.length === 0) return;
+
+      // Add route source and layers
+      map.current.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: route.coordinates,
+          },
+        },
+      });
+
+      // Add outline layer (for better visibility)
+      map.current.addLayer({
+        id: outlineLayerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': resolvedTheme === 'dark' ? '#1e3a5f' : '#1e40af',
+          'line-width': 8,
+          'line-opacity': 0.4,
+        },
+      });
+
+      // Add main route layer
+      map.current.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': resolvedTheme === 'dark' ? '#60a5fa' : '#3b82f6',
+          'line-width': 4,
+        },
+      });
+
+      // Add user location marker
+      if (userLocation) {
+        const el = document.createElement('div');
+        el.innerHTML = `
+          <div style="
+            width: 20px;
+            height: 20px;
+            background-color: #3b82f6;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+          "></div>
+        `;
+
+        userMarkerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat([userLocation.lng, userLocation.lat])
+          .addTo(map.current);
+      }
+
+      // Fit bounds to show entire route
+      if (route.coordinates.length > 1) {
+        const bounds = new maplibregl.LngLatBounds();
+        route.coordinates.forEach((coord) => bounds.extend(coord));
+        if (userLocation) {
+          bounds.extend([userLocation.lng, userLocation.lat]);
+        }
+        map.current.fitBounds(bounds, {
+          padding: { top: 80, bottom: 80, left: 80, right: 80 },
+          duration: 1000,
+        });
+      }
+    };
+
+    // Handle style changes (need to re-add layers after style change)
+    const handleStyleData = () => {
+      updateRoute();
+    };
+
+    map.current.on('styledata', handleStyleData);
+    updateRoute();
+
+    return () => {
+      map.current?.off('styledata', handleStyleData);
+    };
+  }, [route, userLocation, mapLoaded, resolvedTheme]);
 
   return (
     <>

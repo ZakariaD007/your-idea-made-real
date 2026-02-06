@@ -1,12 +1,17 @@
-import { MapPin, Clock, Phone, Navigation } from 'lucide-react';
+import { MapPin, Clock, Phone, Navigation, Loader2, X } from 'lucide-react';
 import { Service, getServiceTypeLabel, coreServiceTypeLabels } from '@/data/services';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { formatDistance, formatDuration, RouteInfo } from '@/hooks/useDirections';
 
 interface ServiceCardProps {
   service: Service;
   isSelected?: boolean;
   onClick?: () => void;
+  onGetDirections?: (service: Service) => void;
+  onClearDirections?: () => void;
+  isLoadingDirections?: boolean;
+  activeRoute?: RouteInfo | null;
 }
 
 const typeColors: Record<string, string> = {
@@ -24,7 +29,15 @@ const getBadgeClass = (type: string): string => {
   return 'bg-primary/10 text-primary';
 };
 
-export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) {
+export function ServiceCard({ 
+  service, 
+  isSelected, 
+  onClick, 
+  onGetDirections,
+  onClearDirections,
+  isLoadingDirections,
+  activeRoute,
+}: ServiceCardProps) {
   return (
     <div
       data-service-id={service.id}
@@ -63,7 +76,7 @@ export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) 
               {service.phone}
             </a>
           </div>
-      )}
+        )}
       </div>
       
       {service.description && (
@@ -73,21 +86,53 @@ export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) 
       )}
       
       {isSelected && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-3 w-full"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Open Google Maps directions - uses user's current location as origin
-            const destination = `${service.lat},${service.lng}`;
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
-            window.open(url, '_blank', 'noopener,noreferrer');
-          }}
-        >
-          <Navigation className="h-4 w-4 mr-2" />
-          Get Directions
-        </Button>
+        <div className="mt-3 space-y-2">
+          {activeRoute ? (
+            <>
+              <div className="flex items-center justify-between p-2 bg-primary/10 rounded-lg text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-primary">
+                    {formatDistance(activeRoute.distance)}
+                  </span>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground">
+                    {formatDuration(activeRoute.duration)} walking
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClearDirections?.();
+                }}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear Route
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={isLoadingDirections}
+              onClick={(e) => {
+                e.stopPropagation();
+                onGetDirections?.(service);
+              }}
+            >
+              {isLoadingDirections ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Navigation className="h-4 w-4 mr-2" />
+              )}
+              {isLoadingDirections ? 'Getting Directions...' : 'Get Directions'}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
