@@ -4,6 +4,7 @@ import { ServicePanel } from '@/components/ServicePanel';
 import { ServiceMap } from '@/components/ServiceMap';
 import { SuggestLocationDialog } from '@/components/SuggestLocationDialog';
 import { supabase } from '@/lib/supabase';
+import { useDirections } from '@/hooks/useDirections';
 import type { Location } from '@/types/database';
 
 const Index = () => {
@@ -19,6 +20,9 @@ const Index = () => {
   const [isPlacingMarker, setIsPlacingMarker] = useState(false);
   const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showSuggestDialog, setShowSuggestDialog] = useState(false);
+
+  // Directions state
+  const { route, userLocation, isLoading: isLoadingDirections, getDirections, clearRoute } = useDirections();
 
   // Fetch services from Supabase
   const fetchServices = async () => {
@@ -143,6 +147,10 @@ const Index = () => {
     fetchApprovedLocations();
   };
 
+  const handleGetDirections = async (service: Service) => {
+    await getDirections(service.lat, service.lng);
+  };
+
   return (
     <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden">
       <ServicePanel
@@ -158,6 +166,10 @@ const Index = () => {
         onStartPlacingMarker={handleStartPlacingMarker}
         onCancelPlacement={handleCancelPlacement}
         isLoading={isLoading}
+        onGetDirections={handleGetDirections}
+        onClearDirections={clearRoute}
+        isLoadingDirections={isLoadingDirections}
+        activeRoute={route}
       />
       <div className="flex-1 min-h-[50vh] md:min-h-full relative">
         <ServiceMap
@@ -170,6 +182,8 @@ const Index = () => {
           isPlacingMarker={isPlacingMarker}
           onMarkerPlaced={handleMarkerPlaced}
           pendingMarkerCoords={pendingMarkerCoords}
+          route={route}
+          userLocation={userLocation}
         />
       </div>
 
