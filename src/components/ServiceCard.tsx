@@ -1,6 +1,7 @@
-import { MapPin, Clock, Phone } from 'lucide-react';
+import { MapPin, Clock, Phone, Navigation } from 'lucide-react';
 import { Service, getServiceTypeLabel, coreServiceTypeLabels } from '@/data/services';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface ServiceCardProps {
   service: Service;
@@ -62,13 +63,31 @@ export function ServiceCard({ service, isSelected, onClick }: ServiceCardProps) 
               {service.phone}
             </a>
           </div>
-        )}
+      )}
       </div>
       
       {service.description && (
         <p className="mt-3 text-sm text-muted-foreground/80 line-clamp-2">
           {service.description}
         </p>
+      )}
+      
+      {isSelected && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Open Google Maps directions - uses user's current location as origin
+            const destination = `${service.lat},${service.lng}`;
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <Navigation className="h-4 w-4 mr-2" />
+          Get Directions
+        </Button>
       )}
     </div>
   );
