@@ -1,5 +1,5 @@
 // Core service types - these have predefined icons/labels
-export type CoreServiceType = 'clinic' | 'library' | 'shelter' | 'food';
+export type CoreServiceType = 'clinic' | 'library' | 'shelter' | 'food' | 'restaurant' | 'police' | 'park' | 'hospital' | 'pharmacy' | 'school';
 
 // ServiceType can be a core type or any custom string (for "other")
 export type ServiceType = string;
@@ -9,6 +9,12 @@ export const coreServiceTypeLabels: Record<CoreServiceType, string> = {
   library: 'Library',
   shelter: 'Shelter',
   food: 'Food Bank',
+  restaurant: 'Restaurant',
+  police: 'Police Station',
+  park: 'Park',
+  hospital: 'Hospital',
+  pharmacy: 'Pharmacy',
+  school: 'School',
 };
 
 export const coreServiceTypeIcons: Record<CoreServiceType, string> = {
@@ -16,6 +22,12 @@ export const coreServiceTypeIcons: Record<CoreServiceType, string> = {
   library: '📚',
   shelter: '🏠',
   food: '🍲',
+  restaurant: '🍽️',
+  police: '👮',
+  park: '🌳',
+  hospital: '🏨',
+  pharmacy: '💊',
+  school: '🎓',
 };
 
 // Helper to get label for any service type (core or custom)

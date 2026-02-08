@@ -17,7 +17,7 @@ export interface UserRole {
   created_at: string;
 }
 
-export type ServiceType = 'clinic' | 'library' | 'shelter' | 'food';
+export type ServiceType = 'clinic' | 'library' | 'shelter' | 'food' | 'restaurant' | 'police' | 'park' | 'hospital' | 'pharmacy' | 'school';
 
 export interface ServiceRow {
   id: string;

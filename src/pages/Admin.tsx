@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, Check, X, MapPin, Clock, Database, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { capeTownServices } from '@/data/capeTownServices';
 import type { Location, LocationStatus } from '@/types/database';
 
 export default function Admin() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -91,6 +93,49 @@ export default function Admin() {
     }
   };
 
+  const seedDatabase = async () => {
+    setSeeding(true);
+    try {
+      // Insert services one by one to handle potential conflicts
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const service of capeTownServices) {
+        const { error } = await supabase
+          .from('services')
+          .insert({
+            name: service.name,
+            type: service.type,
+            address: service.address,
+            lat: service.lat,
+            lng: service.lng,
+            phone: service.phone || null,
+            hours: service.hours,
+            description: service.description || null,
+          });
+        
+        if (error) {
+          // Likely duplicate, skip
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      }
+
+      toast({
+        title: 'Database seeded',
+        description: `Added ${successCount} new services. ${errorCount} already existed.`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error seeding database',
+        description: 'Failed to add services',
+      });
+    }
+    setSeeding(false);
+  };
+
   const getStatusBadge = (status: LocationStatus) => {
     const variants: Record<LocationStatus, 'default' | 'secondary' | 'destructive'> = {
       pending: 'secondary',
@@ -116,14 +161,24 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Manage location suggestions</p>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold">Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Manage location suggestions</p>
+            </div>
           </div>
+          <Button onClick={seedDatabase} disabled={seeding}>
+            {seeding ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Database className="h-4 w-4 mr-2" />
+            )}
+            Seed Cape Town Data
+          </Button>
         </div>
       </div>
 
