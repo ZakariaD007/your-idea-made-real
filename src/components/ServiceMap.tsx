@@ -356,16 +356,25 @@ export function ServiceMap({
     // Function to add or update route
     const updateRoute = () => {
       if (!map.current) return;
+      
+      // Wait for style to be fully loaded
+      if (!map.current.isStyleLoaded()) {
+        return;
+      }
 
       // Remove existing route layers
-      if (map.current.getLayer(layerId)) {
-        map.current.removeLayer(layerId);
-      }
-      if (map.current.getLayer(outlineLayerId)) {
-        map.current.removeLayer(outlineLayerId);
-      }
-      if (map.current.getSource(sourceId)) {
-        map.current.removeSource(sourceId);
+      try {
+        if (map.current.getLayer(layerId)) {
+          map.current.removeLayer(layerId);
+        }
+        if (map.current.getLayer(outlineLayerId)) {
+          map.current.removeLayer(outlineLayerId);
+        }
+        if (map.current.getSource(sourceId)) {
+          map.current.removeSource(sourceId);
+        }
+      } catch (e) {
+        console.log('Error removing layers:', e);
       }
 
       // Remove user marker
@@ -376,93 +385,102 @@ export function ServiceMap({
 
       if (!route || !route.coordinates || route.coordinates.length === 0) return;
 
-      // Add route source and layers
-      map.current.addSource(sourceId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: route.coordinates,
+      try {
+        // Add route source and layers
+        map.current.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: route.coordinates,
+            },
           },
-        },
-      });
-
-      // Add outline layer (for better visibility)
-      map.current.addLayer({
-        id: outlineLayerId,
-        type: 'line',
-        source: sourceId,
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': resolvedTheme === 'dark' ? '#1e3a5f' : '#1e40af',
-          'line-width': 8,
-          'line-opacity': 0.4,
-        },
-      });
-
-      // Add main route layer
-      map.current.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': resolvedTheme === 'dark' ? '#60a5fa' : '#3b82f6',
-          'line-width': 4,
-        },
-      });
-
-      // Add user location marker
-      if (userLocation) {
-        const el = document.createElement('div');
-        el.innerHTML = `
-          <div style="
-            width: 20px;
-            height: 20px;
-            background-color: #3b82f6;
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
-          "></div>
-        `;
-
-        userMarkerRef.current = new maplibregl.Marker({ element: el })
-          .setLngLat([userLocation.lng, userLocation.lat])
-          .addTo(map.current);
-      }
-
-      // Fit bounds to show entire route
-      if (route.coordinates.length > 1) {
-        const bounds = new maplibregl.LngLatBounds();
-        route.coordinates.forEach((coord) => bounds.extend(coord));
-        if (userLocation) {
-          bounds.extend([userLocation.lng, userLocation.lat]);
-        }
-        map.current.fitBounds(bounds, {
-          padding: { top: 80, bottom: 80, left: 80, right: 80 },
-          duration: 1000,
         });
+
+        // Add outline layer (for better visibility)
+        map.current.addLayer({
+          id: outlineLayerId,
+          type: 'line',
+          source: sourceId,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': resolvedTheme === 'dark' ? '#1e3a5f' : '#1e40af',
+            'line-width': 8,
+            'line-opacity': 0.4,
+          },
+        });
+
+        // Add main route layer
+        map.current.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': resolvedTheme === 'dark' ? '#60a5fa' : '#3b82f6',
+            'line-width': 4,
+          },
+        });
+
+        // Add user location marker
+        if (userLocation) {
+          const el = document.createElement('div');
+          el.innerHTML = `
+            <div style="
+              width: 20px;
+              height: 20px;
+              background-color: #3b82f6;
+              border: 3px solid white;
+              border-radius: 50%;
+              box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+            "></div>
+          `;
+
+          userMarkerRef.current = new maplibregl.Marker({ element: el })
+            .setLngLat([userLocation.lng, userLocation.lat])
+            .addTo(map.current);
+        }
+
+        // Fit bounds to show entire route
+        if (route.coordinates.length > 1) {
+          const bounds = new maplibregl.LngLatBounds();
+          route.coordinates.forEach((coord) => bounds.extend(coord));
+          if (userLocation) {
+            bounds.extend([userLocation.lng, userLocation.lat]);
+          }
+          map.current.fitBounds(bounds, {
+            padding: { top: 80, bottom: 80, left: 80, right: 80 },
+            duration: 1000,
+          });
+        }
+      } catch (e) {
+        console.error('Error adding route layers:', e);
       }
     };
 
-    // Handle style changes (need to re-add layers after style change)
-    const handleStyleData = () => {
+    // Handle style load event for when style is ready
+    const handleStyleLoad = () => {
       updateRoute();
     };
 
-    map.current.on('styledata', handleStyleData);
-    updateRoute();
+    // Listen for style.load which fires after style is fully loaded
+    map.current.on('style.load', handleStyleLoad);
+    
+    // Also try to update immediately if style is already loaded
+    if (map.current.isStyleLoaded()) {
+      updateRoute();
+    }
 
     return () => {
-      map.current?.off('styledata', handleStyleData);
+      map.current?.off('style.load', handleStyleLoad);
     };
   }, [route, userLocation, mapLoaded, resolvedTheme]);
 
