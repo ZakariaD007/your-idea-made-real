@@ -96,26 +96,24 @@ export default function Admin() {
   const seedDatabase = async () => {
     setSeeding(true);
     try {
-      // Insert services one by one to handle potential conflicts
+      // Insert services into locations table with approved status
       let successCount = 0;
       let errorCount = 0;
       
       for (const service of capeTownServices) {
         const { error } = await supabase
-          .from('services')
+          .from('locations')
           .insert({
             name: service.name,
-            type: service.type,
-            address: service.address,
-            lat: service.lat,
-            lng: service.lng,
-            phone: service.phone || null,
-            hours: service.hours,
-            description: service.description || null,
+            service_type: service.type,
+            description: `${service.address}${service.phone ? ` | ${service.phone}` : ''} | ${service.hours}${service.description ? ` | ${service.description}` : ''}`,
+            latitude: service.lat,
+            longitude: service.lng,
+            status: 'approved',
           });
         
         if (error) {
-          // Likely duplicate, skip
+          console.error('Insert error:', error.message);
           errorCount++;
         } else {
           successCount++;
@@ -124,9 +122,13 @@ export default function Admin() {
 
       toast({
         title: 'Database seeded',
-        description: `Added ${successCount} new services. ${errorCount} already existed.`,
+        description: `Added ${successCount} new services. ${errorCount} already existed or failed.`,
       });
+      
+      // Refresh the locations list
+      fetchLocations();
     } catch (error) {
+      console.error('Seed error:', error);
       toast({
         variant: 'destructive',
         title: 'Error seeding database',
